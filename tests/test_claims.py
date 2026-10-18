@@ -149,6 +149,6 @@ def test_readme_variance_numbers():
     text = _readme()
     rows = get("variance")
     ratios = [r["std_db"] / r["formula_db"] - 1.0 for r in rows]
-    assert f"liegt {ev.de(100 * min(ratios), 0)} bis {ev.de(100 * max(ratios), 0)} % unter dem gemessenen Wert" in text
+    assert f"liegt {ev.de(100 * min(ratios), 0)} bis {ev.de(100 * max(ratios), 0)} % über der Faustformel" in text
     r = row(rows, n=128, p=8)
     assert f"n = 128, p = 8: {ev.de(r['std_db'], 2)} gegen {ev.de(r['formula_db'], 2)} dB" in text

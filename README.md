@@ -12,7 +12,7 @@ Zusatzrauschen, bis zu zwei Sinuslinien) wird mit einem AR-Modell angepasst; dre
 ## Warum dieses Problem
 
 Welch und Multitaper (vorige Demos) mitteln Spektralwerte und verlieren bei kurzen Daten Auflösung. Das AR-Verfahren schätzt wenige Parameter statt vieler Werte und gewinnt viel – solange
-das Modell stimmt. Die Demo zeigt, was es gewinnt (Faktor 3 bis 5 im Fehler) und was es riskiert (Ordnung, Zusatzrauschen, Sinuslinien, Yule-Walker bei steilen Spektren).
+das Modell stimmt. Die Demo zeigt, was es gewinnt (Faktor 2,6 bis 5 im Fehler bei bekannter Ordnung, mit AIC-gewählter Ordnung 1,7 bis 4,2, jeweils mit Heimvorteil) und was es riskiert (Ordnung, Zusatzrauschen, Sinuslinien, Yule-Walker bei steilen Spektren).
 
 ## Modell
 
@@ -22,7 +22,7 @@ alle selbst in numpy; scipy dient nur als Orakel in den Tests. Die Abtastrate is
 
 ## Methodik
 
-n = 32 bis 1024, Ordnung fest (1 bis 20, höchstens n/3) oder per AIC, AICc, BIC, FPE gewählt. Vergleich mit Welch (Hann, 50 %, Länge n/4) und dem Hann-Periodogramm im Bild, in den Experimenten mit
+n = 32 bis 1024, Ordnung fest (1 bis 20, höchstens n/3) oder per AIC, AICc, BIC, FPE gewählt. Vergleich mit Welch (Hann, 50 %, Länge n/4, mindestens 16) und dem Hann-Periodogramm im Bild, in den Experimenten mit
 dem besten Welch und dem besten Multitaper. Experimente über feste Zufallsströme (Seeds ab 500000), jede Zahl ein Mittel über 100 bis 600 Läufe. Fehler sind RMSE von 10·log₁₀(Schätzung/Wahrheit) in dB.
 
 ## Befunde (gemessen, keine Behauptungen)
@@ -31,22 +31,22 @@ Alle Zahlen stehen in `tests/test_claims.py` und `tests/test_experiments_golden.
 
 | Frage | Befund |
 |---|---|
-| Wie gut ist die Anpassung bei kurzen Daten (AR(2), Pole 0,98, wahre Ordnung, n = 64)? | Polradius 0,954 (Yule-Walker) gegen 0,971 (Burg), wahr 0,98; Fehler 2,99 / 1,56 / 1,52 dB, Welch 6,08 dB (Yule-Walker / Burg / Kovarianz). Mit n = 1024 liegen alle unter 0,5 dB. |
-| Welche Ordnung trifft das Kriterium (wahre Ordnung 2, n = 256)? | AIC / AICc / BIC / FPE treffen in 68 / 70 / 98 / 68 % der Läufe; zu kleine Ordnungen kommen nie vor, AIC und FPE überschätzen. Bei n = 1024: BIC 99 bis 100 %. |
-| Beste gegen beste (n = 128, Resonanz)? | 0,97 dB (AR) gegen 2,75 dB (Welch) und 2,52 dB (Multitaper). Bei steilem Hintergrund liegt der Fehler bei 10,2 dB mit Yule-Walker gegen 1,02 dB mit Burg (jeweils wahre Ordnung). |
+| Wie gut ist die Anpassung bei kurzen Daten (AR(2), Pole 0,98, wahre Ordnung, n = 64)? | Polradius 0,954 (Yule-Walker) gegen 0,971 (Burg), wahr 0,98; Fehler 2,99 / 1,56 / 1,52 dB, Welch 6,08 dB (Yule-Walker / Burg / Kovarianz; Welch mit fester Länge n/4 = 16, mit der besten Länge 32 sind es 4,10 dB, der beste Multitaper erreicht 3,84 dB). Mit n = 1024 liegen alle drei AR-Schätzer unter 0,5 dB (Welch 1,75 dB). |
+| Welche Ordnung trifft das Kriterium (wahre Ordnung 2, n = 256)? | AIC / AICc / BIC / FPE treffen in 68 / 70 / 98 / 68 % der Läufe; zu kleine Ordnungen kamen in keinem der Läufe vor (0 von 300 je Zelle, 0 von 5 000 in einer Nachprüfung), AIC und FPE überschätzen. Bei n = 1024: BIC 99 bis 100 %. |
+| Beste gegen beste (n = 128, Resonanz)? | 0,97 dB (AR) gegen 2,75 dB (Welch) und 2,52 dB (Multitaper); das AR-Verfahren hier mit wahrer Ordnung (mit AIC 1,44 dB, mit BIC 0,99 dB), Welch und Multitaper mit der besten Länge bzw. Bandbreite. Bei steilem Hintergrund liegt der Fehler bei 10,2 dB mit Yule-Walker gegen 1,02 dB mit Burg (jeweils wahre Ordnung). |
 | Und wenn das Modell nicht stimmt (weißes Rauschen 10 dB unter dem AR-Anteil, n = 512)? | Ordnung 2: Gipfel -5,0 dB, Fehler 2,56 dB gegen Welch 1,80 dB; Ordnung 4: 1,22 dB; Ordnung 10: 0,92 dB. |
-| Wie dicht dürfen zwei Linien liegen (10 dB je Linie, n = 64, Einbruch mindestens 3 dB)? | Bei 1,5 Bins Abstand: Burg mit Ordnung 16 100 %, Hann-Periodogramm 34 % der Läufe; Burg mit der kleinsten Ordnung 4 trennt sie bei 4 Bins noch nie. |
-| Zeigt das AR-Spektrum Zusatzgipfel (eine Linie, n = 32)? | Bei 60 dB und Ordnung 4: Burg in 18 % der Läufe (Linienaufspaltung); Kovarianzmethode bei Ordnung 12 in 31 %; Yule-Walker nie. |
-| Wie genau ist die Frequenz einer Linie (20 dB, n = 64)? | 0,12 Bins (Burg), 0,02 Bins (Periodogramm): Für eine einzelne Linie ist die FFT genauer. |
-| Streuung des AR-Spektrums? | Die Faustformel 10/ln 10 · √(2p/n) liegt 2 bis 18 % unter dem gemessenen Wert (n = 128, p = 8: 1,63 gegen 1,54 dB). |
+| Wie dicht dürfen zwei Linien liegen (10 dB je Linie, n = 64, Einbruch mindestens 3 dB)? | Bei 1,5 Bins Abstand: Burg mit Ordnung 16 100 %, Hann-Periodogramm 34 % der Läufe (das Rechteckfenster trennt in einer Nachmessung deutlich öfter, etwa 80 %); Burg mit der kleinsten Ordnung 4 trennt sie bei 4 Bins praktisch nie (0 von 200 Läufen; 51,5 % erst bei 6 Bins). |
+| Zeigt das AR-Spektrum Zusatzgipfel (eine Linie, n = 32)? | Bei 60 dB und Ordnung 4: Burg in 18 % der Läufe (Linienaufspaltung); Kovarianzmethode bei Ordnung 12 in 31 % (Standardfehler 2 bis 3 Punkte; eine Nachprüfung mit 5 000 Läufen gab 19 und 28 %; Ordnung 12 gibt es in der App bei n = 32 nicht, dort höchstens 10); Yule-Walker in keinem Lauf. |
+| Wie genau ist die Frequenz einer Linie (20 dB, n = 64)? | 0,12 Bins (Burg), 0,02 Bins (Periodogramm): Für eine einzelne Linie ist die FFT genauer (AR(2) gegen die Spitze des Hann-Periodogramms; die FFT-Zahl ist durch das Gitter nach oben begrenzt). |
+| Streuung des AR-Spektrums? | Der gemessene Wert liegt 2 bis 18 % über der Faustformel 10/ln 10 · √(2p/n) (weißes Rauschen, Burg; n = 128, p = 8: 1,63 gegen 1,54 dB). |
 
 ## Ehrliche Grenzen
 
-- **Heimvorteil:** Die Daten sind exakt autoregressiv; der Vergleich mit Welch und Multitaper zeigt die Obergrenze des Vorteils, nicht den Alltag. Zusatzrauschen und Sinuslinien sind das Gegengewicht.
+- **Heimvorteil:** Die Daten sind exakt autoregressiv; der Vergleich mit Welch und Multitaper zeigt den Vorteil im günstigsten Fall (Modell und Ordnung stimmen), nicht den Alltag. Zusatzrauschen und Sinuslinien sind das Gegengewicht.
 - **Nur Prozesse bis Ordnung 4 aus Polen** (wie der Generator), keine Nullstellen (ARMA); keine Maximum-Entropie-Varianten, kein Prony.
 - **Yule-Walker mit der üblichen verzerrten Autokovarianz** (Teilung durch n, ohne Fenster); eine andere Konvention verschiebt die Zahlen.
-- **Die Auflösung hängt vom Einbruchskriterium, von 10 dB je Linie und von n = 64 ab**; die Ordnung n/4 ist die kleinste, mit der sich die Linien sicher trennen ließen, keine Regel.
-- **Die Ordnungskriterien** nutzen die Fehlervarianz der Burg-Rekursion; bei kurzen Daten (n = 64) trifft BIC in 92 bis 94 %, nicht in 99 %.
+- **Die Auflösung hängt vom Einbruchskriterium, von 10 dB je Linie und von n = 64 ab**; Ordnung 16 (= n/4) trennt bei 1,5 Bins fast immer (Ordnung 14: 95 %, 12: 67 %); die nötige Ordnung hängt vom Abstand ab, n/4 ist keine Regel.
+- **Die Ordnungskriterien** nutzen im Experiment die Fehlervarianz der Burg-Rekursion (in der App die des gewählten Schätzers); bei kurzen Daten (n = 64) trifft BIC in etwa 89 bis 94 % der Läufe, nicht in 99 %.
 - **Stationär, reell, mittelwertfrei.**
 
 ## Verifikation
@@ -56,7 +56,7 @@ Alle Zahlen stehen in `tests/test_claims.py` und `tests/test_experiments_golden.
   Kleinste-Quadrate-Lösung; AR-Spektrum gegen `signal_generator.true_psd`; lange Reihe (n = 20 000) auf 2 % der wahren Koeffizienten; BIC trifft die Ordnung in über 90 %; Streuformel innerhalb 20 %;
   Welch gegen `scipy.signal.welch`, Taper gegen `scipy.signal.windows.dpss`.
 - **Generator** (`tests/test_generator.py`): wortgleich aus der ersten Demo.
-- **Zahlen:** jede Zahl dieser README in `tests/test_claims.py`; Festwerte der Experimente in `tests/test_experiments_golden.py`; Verdikte in `tests/test_verdicts.py`.
+- **Zahlen:** jede Zahl dieser README in `tests/test_claims.py` oder `tests/test_experiments_golden.py` (der Faktor 2,6 bis 5 nur als Bereich); Festwerte der Experimente in `tests/test_experiments_golden.py`; Verdikte in `tests/test_verdicts.py`.
 - **Oberfläche:** AppTest-Rauchtest (jeder Button, jeder Regler an den Grenzen), Schätzer, Ordnungsarten, Hintergründe, Permalink, Ordnung gegen Länge, Footer.
 
 ## Dateistruktur

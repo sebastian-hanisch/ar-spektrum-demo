@@ -90,5 +90,5 @@ PRESET_HELP = {
     "Ordnung wählen": "Zwei scharfe Resonanzen (wahre Ordnung 4), n = 256: Bei diesem Seed wählt AIC Ordnung 12, BIC die richtige 4; im Mittel trifft AIC die Ordnung nur in 70 % der Läufe, BIC in 99 %.",
     "Steiler Hintergrund": "57 dB Spannweite, Yule-Walker mit der wahren Ordnung 4: Die verzerrte Autokovarianz liefert schlechte Pole, das Spektrum liegt weit daneben. Mit Burg stimmt es.",
     "Zusatzrauschen": "Resonanz plus weißes Rauschen (10 dB gegen den AR-Anteil), Ordnung 2: Das Modell stimmt nicht mehr, der Gipfel sinkt ab. Ordnung 10 oder „BIC“ fängt es ab.",
-    "Zwei Linien": "Zwei Sinuslinien im Abstand von 2 Bins, Ordnung 16 = n/4: Das AR-Spektrum trennt sie, das Periodogramm nicht. Mit Ordnung 4 verschmelzen sie.",
+    "Zwei Linien": "Zwei Sinuslinien im Abstand von 2 Bins, Ordnung 16 = n/4: Das AR-Spektrum trennt sie, das Hann-Periodogramm nicht (bei diesem Seed; bei 2 Bins trennt es in rund der Hälfte der Läufe). Mit Ordnung 4 verschmelzen sie.",
 }

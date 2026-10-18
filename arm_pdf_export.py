@@ -32,7 +32,7 @@ def build_pdf(a: Analysis) -> bytes:
     pdf.ln(2)
     out = [f"Gewählte Ordnung je Kriterium: " + ", ".join(f"{k} {v}" for k, v in a.chosen.items()) + ".",
            f"Größter Polradius {de(a.max_radius, 3)}; Fehlervarianz sigma^2 = {de(a.sigma2, 4)}.",
-           f"Streuung des logarithmierten Spektrums nach der Faustformel: {de(a.std_formula_db, 2)} dB.",
+           f"Streuung des logarithmierten Spektrums abseits der Gipfel nach der Faustformel (gilt für weißes Rauschen): {de(a.std_formula_db, 2)} dB; am Gipfel streut es stärker.",
            f"Rechenaufwand (komplexe Multiplikationen): {a.ops} (Anpassung), {a.ops_fft} (eine FFT der Länge n)."]
     if a.rmse_db is not None:
         out.append(f"Fehler des Spektrums gegen die wahre Dichte: AR {de(a.rmse_db, 2)} dB, Welch {de(a.welch_rmse_db, 2)} dB, Periodogramm {de(a.fft_rmse_db, 2)} dB.")

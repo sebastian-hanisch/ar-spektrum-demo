@@ -55,7 +55,7 @@ st.title("📈 AR-Spektrum: ein Modell statt einer Mittelung")
 st.markdown(
     """
 Welch und Multitaper mitteln Spektralwerte. Das **AR-Spektrum** passt stattdessen ein **autoregressives Modell** an: Jeder Messwert wird aus den letzten *p* vorhergesagt,
-$x[t] = \\sum_k a_k x[t-k] + e[t]$; aus den wenigen Koeffizienten folgt das Spektrum $\\sigma^2/|A(f)|^2$. Bei kurzen Daten und schmalen Gipfeln ist das viel schärfer als jede Mittelung,
+$x[t] = \\sum_k a_k x[t-k] + e[t]$; aus den wenigen Koeffizienten folgt das Spektrum $\\sigma^2/|A(f)|^2$. Bei kurzen Daten und schmalen Gipfeln ist das viel schärfer als Welch oder Multitaper,
 **solange das Modell stimmt**: Die Ordnung muss passen, und das Signal muss wirklich autoregressiv sein.
 
 Dies ist die fünfte Demo der Reihe „Spektral- und Wavelet-Analyse“, auf **Multitaper** und den Demos davor aufbauend; „AR“ als Prognosemodell einer Zeitreihe ist hier nicht gemeint.
@@ -66,10 +66,10 @@ Alles ist **simuliert**: Pole, Linien und die wahre Dichte sind bekannt. Weiter 
 with st.expander("So funktioniert das AR-Spektrum", expanded=True):
     st.markdown(
         """
-1. **Modell:** Die Daten werden als Ausgang eines Filters aus weißem Rauschen gesehen. Die Pole des Filters liegen im Einheitskreis; je näher am Rand, desto schärfer der Gipfel.
+1. **Modell:** Die Daten werden als Ausgang eines Filters aus weißem Rauschen gesehen. Die Pole des Filters liegen innerhalb des Einheitskreises; je näher am Rand, desto schärfer der Gipfel.
 2. **Drei Wege zu den Koeffizienten:** **Yule-Walker** löst die Normalgleichungen mit der Autokovarianz (verzerrt, glatt), **Burg** minimiert Vorwärts- und Rückwärtsfehler stufenweise,
    die **Kovarianzmethode** löst ein Kleinste-Quadrate-Problem auf den Daten.
-3. **Ordnung:** Zu klein: Gipfel fehlen. Zu groß: Zusatzgipfel und mehr Streuung. **AIC**, **AICc**, **BIC** und **FPE** bestrafen die Ordnung unterschiedlich stark.
+3. **Ordnung:** Zu klein: Gipfel fehlen. Zu groß: mehr Streuung und je nach Schätzer und Signal Zusatzgipfel. **AIC**, **AICc**, **BIC** und **FPE** bestrafen die Ordnung unterschiedlich stark.
 4. **Fehlspezifikation:** Weißes Rauschen auf dem Signal ist kein AR-Prozess mehr; Sinuslinien brauchen viele Pole.
         """
     )
@@ -116,7 +116,7 @@ with st.sidebar:
         line, snr = float(st.session_state["line_kept"]), int(st.session_state["snr_kept"])
     if lines == "zwei":
         gap = st.slider("Abstand der Linie 2 (Bins von f_s/n)", C.GAP_MIN, C.GAP_MAX, float(st.session_state["gap_kept"]), step=C.GAP_STEP,
-                        help="Abstand der zweiten Linie in Vielfachen von f_s/n. Ein Periodogramm trennt sie ab etwa 2 Bins.")
+                        help="Abstand der zweiten Linie in Vielfachen von f_s/n. Ein Hann-Periodogramm trennt sie sicher erst ab etwa 3 Bins (bei 2 Bins in rund der Hälfte der Läufe).")
         st.session_state["gap_kept"] = float(gap)
         rel = st.slider("Linie 2 gegen Linie 1 (dB)", C.REL_MIN, C.REL_MAX, int(st.session_state["rel_kept"]), help="0 dB: gleich stark.")
         st.session_state["rel_kept"] = int(rel)
@@ -144,7 +144,7 @@ else:
     m3.metric("Fehler des Spektrums", "–", delta="nur ohne Linien messbar", delta_color="off")
 m4.metric("Rechenaufwand", f"{a.ops:,}".replace(",", "."), delta=f"{de(a.ops / a.ops_fft, 1)}-fach einer FFT der Länge n", delta_color="off", help="Komplexe Multiplikationen der Anpassung (grobe Zählung).")
 st.plotly_chart(build_spectrum(a, zoom=False), width="stretch", key="spectrum_full")
-st.caption("Blau: AR-Spektrum. Grau: Welch (Hann, 50 % Überlappung, Länge n/4) und das Periodogramm mit Hann. Grün gepunktet: wahre Dichte des Rauschens (ohne die Linien), "
+st.caption("Blau: AR-Spektrum. Grau: Welch (Hann, 50 % Überlappung, Länge n/4, mindestens 16) und das Periodogramm mit Hann. Grün gepunktet: wahre Dichte des Rauschens (ohne die Linien), "
            "rot gestrichelt: wahre Lage der Linien. Die Peakhöhe eines AR-Spektrums ist nicht die Leistung einer Linie.")
 if lines != "keine":
     st.plotly_chart(build_spectrum(a, zoom=True), width="stretch", key="spectrum_zoom")
@@ -153,7 +153,7 @@ pc1, pc2 = st.columns(2)
 pc1.plotly_chart(build_poles(a), width="stretch", key="poles")
 pc2.plotly_chart(build_criteria(a), width="stretch", key="criteria")
 st.caption("Links: Pole in der komplexen Ebene (grüner Kreis: wahr, blaues Kreuz: geschätzt). Rechts: Ordnungskriterien als Abstand zum Minimum; die gestrichelte Linie ist die verwendete Ordnung. "
-           f"Streuung des logarithmierten Spektrums nach der Faustformel: ±{de(a.std_formula_db, 2)} dB.")
+           f"Streuung des logarithmierten Spektrums abseits der Gipfel nach der Faustformel (gilt für weißes Rauschen): ±{de(a.std_formula_db, 2)} dB; am Gipfel streut das Spektrum deutlich stärker.")
 
 if st.button("📄 PDF erstellen", key="pdf_make"):
     st.session_state["pdf_bytes"] = build_pdf(a)
@@ -255,8 +255,8 @@ st.markdown(
     """
 | Annahme | Was passiert, wenn sie verletzt ist | Wer setzt an |
 |---|---|---|
-| **Das Signal ist autoregressiv** | Weißes Zusatzrauschen oder Nullstellen im wahren Spektrum: Die Pole wandern nach innen, Gipfel sinken; die Ordnung muss wachsen. | Unterraumverfahren |
-| **Die Ordnung stimmt** | Zu klein: Gipfel fehlen. Zu groß: Zusatzgipfel und mehr Streuung. AIC überschätzt, BIC trifft meist. | Konfidenz und Falschalarm |
+| **Das Signal ist autoregressiv** | Weißes Zusatzrauschen oder Nullstellen im wahren Spektrum: Die Pole wandern nach innen, Gipfel sinken; je stärker das Modell verletzt ist, desto höher muss die Ordnung sein. | Unterraumverfahren |
+| **Die Ordnung stimmt** | Zu klein: Gipfel fehlen. Zu groß: mehr Streuung und je nach Schätzer und Signal Zusatzgipfel. AIC überschätzt, BIC trifft meist. | Konfidenz und Falschalarm |
 | **Yule-Walker mit verzerrter Autokovarianz** | Bei kurzen Daten und steilen Spektren liegen die Pole zu weit innen; der Fehler wird groß. | Burg, Kovarianzmethode |
 | **Sinuslinien** | Linienaufspaltung bei Burg, Zusatzgipfel bei hoher Ordnung; die Peakhöhe ist nicht die Linienleistung. | Unterraumverfahren |
 | **Stationär** | Ändert sich das Spektrum, mittelt das Modell über die ganze Aufzeichnung. | Spektrogramm |
@@ -275,7 +275,7 @@ von $z^p - \sum_k a_k z^{p-k}$.
 **Yule-Walker.** Mit der verzerrten Autokovarianz $r(k) = \frac1n\sum_t x[t]x[t+k]$ lösen die Normalgleichungen $\sum_j a_j r(|k-j|) = r(k)$ ein Toeplitz-System; die Levinson-Durbin-Rekursion liefert
 die Reflexionskoeffizienten $\kappa_m$ und $\sigma_m^2 = \sigma_{m-1}^2(1-\kappa_m^2)$.
 
-**Burg.** $\kappa_m = \dfrac{2\sum_t f_{m-1}[t]\,b_{m-1}[t-1]}{\sum_t f_{m-1}[t]^2 + \sum_t b_{m-1}[t-1]^2}$ mit den Vorwärts- und Rückwärtsfehlern; stets $|\kappa_m| < 1$ (stabiles Modell).
+**Burg.** $\kappa_m = \dfrac{2\sum_t f_{m-1}[t]\,b_{m-1}[t-1]}{\sum_t f_{m-1}[t]^2 + \sum_t b_{m-1}[t-1]^2}$ mit den Vorwärts- und Rückwärtsfehlern; es gilt $|\kappa_m| \le 1$, für nicht entartete Daten $|\kappa_m| < 1$ (stabiles Modell).
 
 **Kovarianzmethode (modifiziert).** Kleinste Quadrate auf der Summe der Vorwärts- und Rückwärtsvorhersagefehler über $t = p..n-1$.
 

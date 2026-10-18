@@ -442,7 +442,7 @@ def verdict_short_data(rows: list[dict]) -> tuple[str, str]:
     m = r["methods"]
     return "warning", (f"Bei n = 64 liegt der Polradius mit Yule-Walker bei {de(m['Yule-Walker']['radius'], 3)}, mit Burg bei {de(m['Burg']['radius'], 3)} (wahr 0,98); der Fehler des Spektrums beträgt "
                        f"{de(m['Yule-Walker']['rmse_db'], 2)} dB gegen {de(m['Burg']['rmse_db'], 2)} dB, Welch {de(r['welch_rmse_db'], 2)} dB. **Die verzerrte Autokovarianz zieht die Pole "
-                       "nach innen, Burg und Kovarianz kaum.**")
+                       "stärker nach innen als Burg und Kovarianz; auch deren Gipfel liegt noch zu niedrig.**")
 
 
 def verdict_order(rows: list[dict]) -> tuple[str, str]:
@@ -466,30 +466,30 @@ def verdict_noise(rows: list[dict]) -> tuple[str, str]:
     r = [x for x in rows if x["snr"] == 10.0][0]
     o = r["orders"]
     return "warning", (f"Mit weißem Rauschen 10 dB unter dem AR-Anteil sinkt der Gipfel bei Ordnung 2 um {de(abs(o[2]['peak_db']), 1)} dB, der Fehler steigt auf {de(o[2]['rmse_db'], 2)} dB "
-                       f"(Welch {de(r['welch_rmse_db'], 2)} dB); Ordnung 10 hält {de(o[10]['rmse_db'], 2)} dB. **Stimmt das Modell nicht, muss die Ordnung wachsen.**")
+                       f"(Welch {de(r['welch_rmse_db'], 2)} dB); Ordnung 10 hält {de(o[10]['rmse_db'], 2)} dB. **Je stärker das Modell verletzt ist, desto höher muss die Ordnung sein.**")
 
 
 def verdict_resolution(rows: list[dict]) -> tuple[str, str]:
     by = {r["label"]: dict(zip(r["deltas"], r["shares"])) for r in rows}
     return "info", (f"Bei 1,5 Bins Abstand trennt Burg mit Ordnung 16 die Linien in {de(100 * by['Burg p = 16'][1.5], 0)} % der Läufe, das Hann-Periodogramm in "
                     f"{de(100 * by['Periodogramm, Hann'][1.5], 0)} %; Burg mit der kleinsten Ordnung 4 trennt sie bei 4 Bins noch in {de(100 * by['Burg p = 4'][4.0], 0)} %. "
-                    "**Hochauflösung gibt es nur mit hoher Ordnung (etwa n/4).**")
+                    "**Hochauflösung unterhalb von 2 Bins gibt es nur mit hoher Ordnung (hier etwa 12 bis 16 bei n = 64).**")
 
 
 def verdict_splitting(rows: list[dict]) -> tuple[str, str]:
     r = [x for x in rows if x["method"] == "Burg" and x["snr"] == 60.0][0]
     k = [x for x in rows if x["method"] == "Kovarianz" and x["snr"] == 60.0][0]
     return "warning", (f"Bei 60 dB und Ordnung 4 zeigt Burg in {de(100 * dict(zip(r['orders'], r['shares']))[4], 0)} % der Läufe einen Zusatzgipfel (Linienaufspaltung), die Kovarianzmethode bei "
-                       f"Ordnung 12 in {de(100 * dict(zip(k['orders'], k['shares']))[12], 0)} %; Yule-Walker nie. **Eine Linie braucht Ordnung 2, mehr erzeugt Gipfel.**")
+                       f"Ordnung 12 in {de(100 * dict(zip(k['orders'], k['shares']))[12], 0)} %; Yule-Walker nie. **Eine Linie braucht Ordnung 2; höhere Ordnungen können bei Burg und Kovarianzmethode in bis zu etwa einem Drittel der Läufe Zusatzgipfel erzeugen.**")
 
 
 def verdict_frequency(rows: list[dict]) -> tuple[str, str]:
     r = _short_row(rows, 64)
     return "info", (f"Für eine einzelne Linie bei 20 dB liegt die Frequenz aus AR(2) bei n = 64 um {de(r['methods']['Burg']['rmse'], 2)} Bins (Burg) bzw. {de(r['methods']['Yule-Walker']['rmse'], 2)} Bins "
-                    f"(Yule-Walker) daneben, die Spitze des Hann-Periodogramms nur um {de(r['fft_rmse'], 2)} Bins. **Für eine Linie ist die FFT genauer.**")
+                    f"(Yule-Walker) daneben, die Spitze des Hann-Periodogramms nur um {de(r['fft_rmse'], 2)} Bins (AR(2); die FFT-Zahl ist durch das Gitter nach oben begrenzt). **Für eine Linie ist die FFT genauer.**")
 
 
 def verdict_variance(rows: list[dict]) -> tuple[str, str]:
     r = [x for x in rows if x["n"] == 128 and x["p"] == 8][0]
-    return "info", (f"Bei n = 128 und Ordnung 8 streut das logarithmierte Spektrum um {de(r['std_db'], 2)} dB; die Faustformel 10/ln 10 · √(2p/n) ergibt {de(r['formula_db'], 2)} dB. "
+    return "info", (f"Bei n = 128 und Ordnung 8 streut das logarithmierte Spektrum um {de(r['std_db'], 2)} dB; die Faustformel 10/ln 10 · √(2p/n) ergibt {de(r['formula_db'], 2)} dB (gilt für weißes Rauschen als wahres Modell; am Gipfel streut das Spektrum deutlich stärker). "
                     "**Die Streuung wächst mit der Ordnung und fällt mit der Länge.**")
