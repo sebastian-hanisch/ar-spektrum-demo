@@ -1,7 +1,6 @@
 # AR-Spektrum: ein Modell statt einer Mittelung – scharf bei kurzen Daten, solange das Modell stimmt – Streamlit-Demo
 
-<!-- TODO nach dem Deploy: direkt hierher den Live-Link setzen (Leerzeile davor und danach):
-**[→ Demo live ausprobieren](https://sebastianhanisch-ar-spektrum-demo.streamlit.app/)** -->
+**[→ Demo live ausprobieren](https://sebastianhanisch-ar-spektrum-demo.streamlit.app/)**
 
 Fünfte Demo der Reihe **Spektral- und Wavelet-Analyse** in der „Konzepte“-Reihe für die Website „Sebastian Hanisch – Operations Research und Machine Learning“, aufbauend auf den Demos
 zum **Periodogramm**, zu **Fenstern**, zu **Bartlett und Welch** und zum **Multitaper**. Ein simuliertes Signal (autoregressiver Hintergrund mit bekannten Polen, optional weißes
@@ -110,4 +109,4 @@ Gebaut mit Streamlit, Plotly, NumPy, pandas und fpdf2.
 
 ---
 
-Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). Mehr zu den Demos: [Interaktive Demos](https://sebastianhanisch.net/demos.html).
+Diese Demo ist Teil des Portfolios von [Sebastian Hanisch](https://sebastianhanisch.net) – Operations Research und Machine Learning ([Über mich](https://sebastianhanisch.net/ueber-mich.html)). Mehr zur Reihe: [Spektren und Wavelets: von Fourier zum Vergleich](https://sebastianhanisch.net/konzepte-spektral-wavelet-analyse.html).
